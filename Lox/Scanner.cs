@@ -27,42 +27,41 @@ namespace Lox{
         } ;  
         public Scanner(string source)
         {
-            this._source = source;
-            
+            _source = source;
         }
         
         public List<Token> ScanTokens(){
-            while(!this.IsAtEnd()){
-                this._start = this._current;
-                this.ScanToken();
+            while(!IsAtEnd()){
+                _start = _current;
+                ScanToken();
             }
-            this._tokens.Add(new Token(TokenType.EOF, string.Empty, null, this._line));
-            return this._tokens;
+            _tokens.Add(new Token(TokenType.EOF, string.Empty, null, _line));
+            return _tokens;
         }
 
-        private bool IsAtEnd() => this._current >= this._source.Length;
+        private bool IsAtEnd() => _current >= _source.Length;
         private void ScanToken(){
-            char c = this.Advance();
+            char c = Advance();
             switch (c) {                                 
-                case '(': this.AddToken(TokenType.LEFT_PAREN); break;     
-                case ')': this.AddToken(TokenType.RIGHT_PAREN); break;    
-                case '{': this.AddToken(TokenType.LEFT_BRACE); break;     
-                case '}': this.AddToken(TokenType.RIGHT_BRACE); break;    
-                case ',': this.AddToken(TokenType.COMMA); break;          
-                case '.': this.AddToken(TokenType.DOT); break;            
-                case '-': this.AddToken(TokenType.MINUS); break;          
-                case '+': this.AddToken(TokenType.PLUS); break;           
-                case ';': this.AddToken(TokenType.SEMICOLON); break;      
-                case '*': this.AddToken(TokenType.STAR); break;
-                case '!': this.AddToken(this.Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG); break;      
-                case '=': this.AddToken(this.Match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL); break;    
-                case '<': this.AddToken(this.Match('=') ? TokenType.LESS_EQUAL : TokenType.LESS); break;      
-                case '>': this.AddToken(this.Match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER); break;
+                case '(': AddToken(TokenType.LEFT_PAREN); break;     
+                case ')': AddToken(TokenType.RIGHT_PAREN); break;    
+                case '{': AddToken(TokenType.LEFT_BRACE); break;     
+                case '}': AddToken(TokenType.RIGHT_BRACE); break;    
+                case ',': AddToken(TokenType.COMMA); break;          
+                case '.': AddToken(TokenType.DOT); break;            
+                case '-': AddToken(TokenType.MINUS); break;          
+                case '+': AddToken(TokenType.PLUS); break;           
+                case ';': AddToken(TokenType.SEMICOLON); break;      
+                case '*': AddToken(TokenType.STAR); break;
+                case '!': AddToken(Match('=') ? TokenType.BANG_EQUAL : TokenType.BANG); break;      
+                case '=': AddToken(Match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL); break;    
+                case '<': AddToken(Match('=') ? TokenType.LESS_EQUAL : TokenType.LESS); break;      
+                case '>': AddToken(Match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER); break;
                 case '/':                                                       
-                    if (this.Match('/')) {                                             
+                    if (Match('/')) {                                             
                     // A comment goes until the end of the line.                
-                        while (this.Peek() != '\n' && !this.IsAtEnd()) this.Advance();             
-                    } else { this.AddToken(TokenType.SLASH); }                                                             
+                        while (Peek() != '\n' && !IsAtEnd()) Advance();             
+                    } else { AddToken(TokenType.SLASH); }                                                             
                     break; 
                 case ' ':                                    
                 case '\r':                                   
@@ -70,26 +69,26 @@ namespace Lox{
                     // Ignore whitespace.                      
                     break;
                 case '\n':                                   
-                    this._line++;                                    
+                    _line++;                                    
                     break;    
                 case '"':
-                    this.String();
+                    String();
                     break;
                 default:   
-                    if(this.IsDigit(c)){
-                        this.Number();
-                    }else if(this.IsAlpha(c)){
-                        this.Identifier();
+                    if(IsDigit(c)){
+                        Number();
+                    }else if(IsAlpha(c)){
+                        Identifier();
                     }
                     else{
-                        Console.Error.WriteLine("[line " + this._line + "] Error" + string.Empty + ": " + "Unexpected character.");    
+                        Console.Error.WriteLine("[line " + _line + "] Error" + string.Empty + ": " + "Unexpected character.");    
                     }                           
                     break;
             } 
         }
         private void Identifier(){
-            while(this.IsAlphaNumeric(this.Peek())) this.Advance();
-            string text = this._source.Substring(this._start, this._current - this._start );
+            while(IsAlphaNumeric(Peek())) Advance();
+            string text = _source.Substring(_start, _current - _start );
             TokenType type =  TokenType.IDENTIFIER;
             if(_keywords.ContainsKey(text)){
                 type = _keywords[text];
@@ -97,54 +96,60 @@ namespace Lox{
             AddToken(type);
         }
         private bool IsAlpha(char c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_');
-        private bool IsAlphaNumeric(char c) => this.IsAlpha(c) || this.IsDigit(c);
+        private bool IsAlphaNumeric(char c) => IsAlpha(c) || IsDigit(c);
         private void String(){
-            while(this.Peek() !='"' & !this.IsAtEnd()){
-                if(this.Peek() == '\n')this._line++;
-                this.Advance();
+            while(Peek() !='"' & !IsAtEnd()){
+                if(Peek() == '\n')_line++;
+                Advance();
             }
-            if(this.IsAtEnd()){
-                Console.Error.WriteLine("[line " + this._line + "] Error" + string.Empty + ": " + "Unterminated string.");   
+            if(IsAtEnd()){
+                Console.Error.WriteLine("[line " + _line + "] Error" + string.Empty + ": " + "Unterminated string.");   
                 return;
             }
-            this.Advance();
-            string value = _source.Substring(this._start + 1, (this._current - this._start));
-            this.AddToken(TokenType.STRING, value);
+            Advance();
+            string value = _source.Substring(_start + 1, (_current - _start));
+            AddToken(TokenType.STRING, value);
         }
         private bool IsDigit(char c) => c >= '0' && c <= '9';
         private void Number(){
-            while(this.IsDigit(this.Peek())) this.Advance();
-            if(this.Peek() == '.' && this.IsDigit(this.Peek())){
-                this.Advance();
-                while(this.IsDigit(this.Peek())) this.Advance();
+            while(IsDigit(Peek())) Advance();
+            if(Peek() == '.' && IsDigit(Peek())){
+                Advance();
+                while(IsDigit(Peek())) Advance();
             }
-            this.AddToken(TokenType.NUMBER, Convert.ToDouble(this._source.Substring(this._start , (this._current - this._start))));
+            var number = Convert.ToDouble(_source.Substring(_start , (_current - _start)));
+            AddToken(TokenType.NUMBER, number);
         }
         private char PeekNext(){
-            if (this._current + 1 >= this._source.Length) return '\0';
-            return this._source[this._current + 1];   
+            if (_current + 1 >= _source.Length) 
+                return '\0';
+            return _source[_current + 1];   
         }
         private char Advance() {                               
-            this._current++;                                           
-            return this._source[this._current - 1];                   
+            _current++;                                           
+            return _source[_current - 1];                   
         }
         private void AddToken(TokenType type) {                
-            this.AddToken(type, null);                                
+            AddToken(type, null);                                
         }                                                      
 
         private void AddToken(TokenType type, object literal) {
-            string text = this._source.Substring(this._start, this._current - this._start);      
-            this._tokens.Add(new Token(type, text, literal, this._line));    
+            string text = _source.Substring(_start, _current - _start);      
+            _tokens.Add(new Token(type, text, literal, _line));    
         } 
         private bool Match(char expected) {                 
-            if (this.IsAtEnd()) return false;                         
-            if (this._source[this._current] != expected) return false;
-            this._current++;                                           
+            if (IsAtEnd()) 
+                return false;                         
+            if (_source[_current] != expected) 
+                return false;
+            _current++;    
+
             return true;                                         
         }
         private char Peek() {           
-            if (this.IsAtEnd()) return '\0';   
-            return this._source[this._current];
+            if (IsAtEnd()) 
+                return '\0';   
+            return _source[_current];
         }    
     }
 }
